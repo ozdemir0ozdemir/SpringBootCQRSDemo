@@ -1,0 +1,35 @@
+version: 3
+
+vars:
+  GOOS: "{{default OS .GOOS}}"
+  MVNW: '{{if eq .GOOS "windows"}}mvnw.cmd{{else}}./mvnw{{end}}'
+  SLEEPCMD: '{{if eq .GOOS "windows"}}timeout{{else}}sleep{{end}}'
+  DC_DIR: "docker-compose"
+  INFRA_DC_FILE: "{{.DC_DIR}}/infra.yml"
+
+tasks:
+  default:
+    cmds:
+      - task: restart-infra
+
+  start_infra:
+    cmds:
+      - "docker compose -f {{.INFRA_DC_FILE}} up -d"
+
+  stop_infra:
+    cmds:
+      - "docker compose -f {{.INFRA_DC_FILE}} stop"
+      - "docker compose -f {{.INFRA_DC_FILE}} rm -f"
+
+  restart_infra:
+    cmds:
+      - task: stop_infra
+      - task: sleep
+      - task: start_infra
+
+  sleep:
+    vars:
+      DURATION: '{{default 5 .DURATION}}'
+    cmds:
+      - "{{.SLEEPCMD}} {{.DURATION}}"
+
